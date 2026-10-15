@@ -1,0 +1,709 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PAPER Mint Cost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: two-pane trading ticket — inputs on the left, live cost readout on the right; stacks on phones. */
+:root {
+  --bg: #EEF2F1;
+  --surface: #FFFFFF;
+  --sunken: #E3E9E7;
+  --ink: #13201E;
+  --muted: #566664;
+  --line: #D2DBD8;
+  --accent: #0B6B62;
+  --accent-soft: #D3EAE6;
+  --alt: #A04A12;
+  --good: #1D7A3E;
+  --warn: #9A6200;
+  --warn-soft: #F7EAD2;
+  --bad: #B3261E;
+  --bad-soft: #F8DEDB;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1413; --surface: #141E1C; --sunken: #1B2725; --ink: #E3ECEA; --muted: #92A4A1;
+    --line: #26342F; --accent: #4CC2B3; --accent-soft: #173A35; --alt: #F0955A; --good: #5BC984; --warn: #E3AE52;
+    --warn-soft: #3A2D14; --bad: #F08A80; --bad-soft: #3D1D1A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1413; --surface: #141E1C; --sunken: #1B2725; --ink: #E3ECEA; --muted: #92A4A1;
+  --line: #26342F; --accent: #4CC2B3; --accent-soft: #173A35; --alt: #F0955A; --good: #5BC984; --warn: #E3AE52;
+  --warn-soft: #3A2D14; --bad: #F08A80; --bad-soft: #3D1D1A; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; margin-bottom: 22px; }
+h1 { font-family: var(--font-display); font-stretch: 78%; font-weight: 800; font-size: clamp(28px, 4.2vw, 40px); letter-spacing: -0.01em; margin: 0; line-height: 1; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+.asof { font-family: var(--font-num); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.layout { display: grid; grid-template-columns: minmax(0, 390px) minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 880px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* Inputs */
+.ticket { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+fieldset { border: 0; margin: 0; padding: 16px 18px; display: grid; gap: 12px; border-top: 1px solid var(--line); min-width: 0; }
+fieldset:first-child { border-top: 0; }
+fieldset.strategy { background: var(--accent-soft); border-radius: var(--r) var(--r) 0 0; }
+legend { float: left; width: 100%; padding: 0; margin-bottom: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+legend + * { clear: both; }
+.row2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.field { display: grid; gap: 5px; min-width: 0; }
+.field > label, .lbl { font-size: 13px; font-weight: 600; }
+.hint { font-size: 12px; color: var(--muted); }
+input[type="number"], select {
+  width: 100%; font-family: var(--font-num); font-size: 14px; color: var(--ink); background: var(--sunken);
+  border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; min-width: 0;
+}
+input:disabled { opacity: 0.5; }
+select { font-family: var(--font-body); }
+input:focus-visible, select:focus-visible, .seg input:focus-visible + span, .check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg { display: flex; background: var(--sunken); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 3px; }
+.strategy .seg { background: var(--surface); }
+.seg label { flex: 1; position: relative; min-width: 0; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span { display: block; text-align: center; font-size: 13px; font-weight: 600; padding: 6px 4px; border-radius: 6px; color: var(--muted); cursor: pointer; }
+.seg input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+.strategy .seg input:checked + span { background: var(--accent); color: var(--surface); box-shadow: none; }
+.check { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); width: fit-content; max-width: 100%; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.good { background: var(--accent-soft); color: var(--good); }
+
+/* Results */
+.results { display: grid; gap: 18px; min-width: 0; }
+.hero { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px 22px; display: grid; gap: 16px; }
+.hero-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+.hero-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.big { font-family: var(--font-num); font-weight: 600; font-size: clamp(38px, 6vw, 56px); letter-spacing: -0.02em; line-height: 1; color: var(--accent); }
+.big-lbl { font-size: 14px; color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); padding-top: 14px; }
+.stats > div { padding-right: 12px; min-width: 0; }
+.stats > div + div { border-left: 1px solid var(--line); padding-left: 14px; }
+@media (max-width: 620px) { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); row-gap: 14px; } .stats > div:nth-child(3) { border-left: 0; padding-left: 0; } }
+.k { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.v { font-family: var(--font-num); font-size: 18px; font-weight: 500; margin-top: 3px; overflow-wrap: anywhere; }
+.v small { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { font-family: var(--font-display); font-stretch: 85%; font-size: 17px; font-weight: 700; margin: 0; text-wrap: balance; }
+.panel p { margin: 0; color: var(--muted); font-size: 13px; max-width: 68ch; }
+.two { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; }
+.two > [hidden] + *, .two > *:only-child { grid-column: 1 / -1; }
+@media (max-width: 1040px) { .two { grid-template-columns: minmax(0,1fr); } }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+td.n, th.n { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; padding-right: 0; padding-left: 10px; }
+tr.total td { font-weight: 600; border-bottom: 0; border-top: 2px solid var(--ink); }
+tr.dim td { color: var(--muted); }
+tr.best td:first-child::after { content: "cheaper"; margin-left: 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--good); }
+.neg { color: var(--good); }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 7px; vertical-align: -1px; }
+.alert { border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+.alert.bad { background: var(--bad-soft); color: var(--bad); }
+.alert.warn { background: var(--warn-soft); color: var(--warn); }
+.alert.ok { background: var(--accent-soft); color: var(--accent); }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--font-num); font-size: 11px; fill: var(--muted); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .line { fill: none; stroke: var(--accent); stroke-width: 2.25; }
+.chart .line2 { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: 0.8; }
+.chart .line3 { fill: none; stroke: var(--alt); stroke-width: 2.25; }
+.chart .dot { stroke: var(--surface); stroke-width: 2.5; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 16px; height: 0; border-top: 2.25px solid var(--accent); vertical-align: middle; margin-right: 6px; }
+.legend i.d { border-top: 1.5px dashed var(--accent); }
+.legend i.a { border-top-color: var(--alt); }
+footer { margin-top: 26px; font-size: 12px; color: var(--muted); display: grid; gap: 4px; max-width: 90ch; }
+footer a { color: var(--accent); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>PAPER Mint Cost</h1>
+      <p class="sub">Delta-neutral minting on Papertrade. Hedge the losing leg on Hyperliquid, or run both legs on Papertrade and pay the win haircut instead of exchange fees.</p>
+    </div>
+    <span class="asof">HL fees &amp; PT params as of Oct 13, 2026</span>
+  </header>
+
+  <div class="layout">
+    <form class="ticket" id="form" autocomplete="off">
+      <fieldset class="strategy">
+        <legend>Strategy</legend>
+        <div class="seg" role="radiogroup" aria-label="Strategy">
+          <label><input type="radio" name="strat" id="stratHl" value="hl" checked><span>PT + HL hedge</span></label>
+          <label><input type="radio" name="strat" id="stratPt" value="pt2"><span>Both legs on PT</span></label>
+        </div>
+        <span class="hint" id="stratHint">Long on Papertrade, short the same notional on Hyperliquid. Close both when the PT leg is down by your target move.</span>
+      </fieldset>
+
+      <fieldset id="fsHl">
+        <legend>Hyperliquid account</legend>
+        <div class="field">
+          <label for="hype">HYPE staked</label>
+          <input type="number" id="hype" min="0" step="1" value="1001">
+          <span class="chip" id="tierChip">Silver · 15% off</span>
+          <span class="hint">Tiers need strictly more than the threshold: 1,000 HYPE exactly is Bronze, 1,001 is Silver.</span>
+        </div>
+        <div class="field">
+          <label for="vol">14-day volume tier</label>
+          <select id="vol">
+            <option value="0" selected>Tier 0 · under $5M</option>
+            <option value="1">Tier 1 · over $5M</option>
+            <option value="2">Tier 2 · over $25M</option>
+            <option value="3">Tier 3 · over $100M</option>
+            <option value="4">Tier 4 · over $500M</option>
+            <option value="5">Tier 5 · over $2B</option>
+            <option value="6">Tier 6 · over $7B</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <span class="lbl" id="openLbl">Open hedge as</span>
+            <div class="seg" role="radiogroup" aria-labelledby="openLbl">
+              <label><input type="radio" name="openType" id="openTaker" value="taker" checked><span>Taker</span></label>
+              <label><input type="radio" name="openType" id="openMaker" value="maker"><span>Maker</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lbl" id="closeLbl">Close hedge as</span>
+            <div class="seg" role="radiogroup" aria-labelledby="closeLbl">
+              <label><input type="radio" name="closeType" id="closeTaker" value="taker" checked><span>Taker</span></label>
+              <label><input type="radio" name="closeType" id="closeMaker" value="maker"><span>Maker</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="spread">HL spread (bps)</label>
+          <input type="number" id="spread" min="0" step="0.01" value="0.12">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Trade setup</legend>
+        <div class="field">
+          <span class="lbl" id="mktLbl">Market</span>
+          <div class="seg" role="radiogroup" aria-labelledby="mktLbl">
+            <label><input type="radio" name="market" id="mktBtc" value="BTC" checked><span>BTC</span></label>
+            <label><input type="radio" name="market" id="mktEth" value="ETH"><span>ETH</span></label>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="notional">Notional per leg ($)</label>
+            <input type="number" id="notional" min="0" step="10000" value="1000000">
+          </div>
+          <div class="field">
+            <label for="move">Close at move (%)</label>
+            <input type="number" id="move" min="0.05" step="0.05" value="1">
+          </div>
+        </div>
+        <div class="field">
+          <label for="lev">PT leverage (×)</label>
+          <input type="number" id="lev" min="1" max="1000" step="1" value="50">
+        </div>
+        <span class="chip" id="liqChip">Liquidates at 1.95% · safe</span>
+      </fieldset>
+
+      <fieldset>
+        <legend>Papertrade mint state</legend>
+        <label class="check"><input type="checkbox" id="flat"> <span>LP is below $2M (flat region, 100 PAPER per $1)</span></label>
+        <div class="row2">
+          <div class="field">
+            <label for="rate">Current mint rate (PAPER/$)</label>
+            <input type="number" id="rate" min="1" max="100" step="0.1" value="85">
+          </div>
+          <div class="field">
+            <label for="hwm">LP gain past $2M ($M)</label>
+            <input type="number" id="hwm" min="0" step="0.1" value="10.16">
+          </div>
+        </div>
+        <span class="hint">Example value. Read the live rate from your Paper tab; the two fields update each other via 100 × (120 / (120 + H))².</span>
+        <label class="check"><input type="checkbox" id="queue"> <span>Payout queue is active (no 2% carve on losses; PT winnings wait in the queue)</span></label>
+      </fieldset>
+
+      <fieldset id="fsCarry">
+        <legend>Carry and wrong-way risk</legend>
+        <div class="field">
+          <span class="lbl" id="dirLbl">Direction</span>
+          <div class="seg" role="radiogroup" aria-labelledby="dirLbl">
+            <label><input type="radio" name="dir" id="dirLong" value="long" checked><span>PT long · HL short</span></label>
+            <label><input type="radio" name="dir" id="dirShort" value="short"><span>PT short · HL long</span></label>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="fund">HL funding (annual %)</label>
+            <input type="number" id="fund" step="0.5" value="9.5">
+          </div>
+          <div class="field">
+            <label for="hold">Hold time (hours)</label>
+            <input type="number" id="hold" min="0" step="1" value="24">
+          </div>
+        </div>
+        <span class="hint">Positive funding means longs pay shorts. BTC averaged about +9.5% over the last 3 weeks.</span>
+        <div class="field">
+          <span class="lbl" id="wwLbl">If price moves your PT leg into profit first</span>
+          <div class="seg" role="radiogroup" aria-labelledby="wwLbl">
+            <label><input type="radio" name="ww" id="wwHold" value="hold" checked><span>Hold until it loses</span></label>
+            <label><input type="radio" name="ww" id="wwUnwind" value="unwind"><span>Unwind both legs</span></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Campaign</legend>
+        <div class="field">
+          <label for="target">Target PAPER to mint</label>
+          <input type="number" id="target" min="0" step="100000" value="1000000">
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="results">
+      <section class="hero" aria-live="polite">
+        <span class="hero-tag" id="heroTag">PT + Hyperliquid hedge</span>
+        <div class="hero-main">
+          <span class="big" id="outPer1k">$0.00</span>
+          <span class="big-lbl">per 1,000 PAPER</span>
+        </div>
+        <div class="stats">
+          <div><div class="k">Per $1 mint basis</div><div class="v" id="outPerBasis">–</div></div>
+          <div><div class="k">Net cost per cycle</div><div class="v" id="outCycleCost">–</div></div>
+          <div><div class="k">PAPER per cycle</div><div class="v" id="outCyclePaper">–</div></div>
+          <div><div class="k">Avg rate this cycle</div><div class="v" id="outAvgRate">–</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Hedge on Hyperliquid vs both legs on Papertrade</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th></th><th class="n">Per 1,000 PAPER</th><th class="n">Per $1 basis</th><th class="n">Cycle cost</th><th class="n">Capital</th></tr></thead>
+            <tbody id="stratCompare"></tbody>
+          </table>
+        </div>
+        <p id="stratNote"></p>
+      </section>
+
+      <div class="two">
+        <section class="panel">
+          <h2>One cycle, line by line</h2>
+          <div class="tbl-wrap">
+            <table>
+              <tbody id="breakdown"></tbody>
+            </table>
+          </div>
+          <p id="breakNote"></p>
+        </section>
+
+        <section class="panel" id="panelStake">
+          <h2>1,000 vs 10,000 HYPE staked</h2>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th></th><th class="n">1,000+</th><th class="n">10,000+</th></tr></thead>
+              <tbody id="compare"></tbody>
+            </table>
+          </div>
+          <p>Same trade setup as on the left, only the staking discount changes (Silver 15% vs Gold 20%).</p>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h2>Cost per 1,000 PAPER by the move you wait for</h2>
+        <p>The Hyperliquid hedge pays a fixed fee per dollar of notional, so it gets cheaper as the move grows. Both-on-Papertrade pays a share of the winning leg's gain, which never drops below about 12%, so it wins only on small moves.</p>
+        <div class="legend"><span><i></i>HL hedge, your order types</span><span><i class="d"></i>HL hedge, maker both sides</span><span><i class="a"></i>Both legs on PT</span></div>
+        <svg class="chart" id="chart" viewBox="0 0 640 260" role="img" aria-label="Cost per 1,000 PAPER by price move for each strategy"></svg>
+      </section>
+
+      <div class="two">
+        <section class="panel">
+          <h2>Capital and liquidation</h2>
+          <div id="liqAlert" class="alert ok"></div>
+          <div class="tbl-wrap"><table><tbody id="capital"></tbody></table></div>
+        </section>
+        <section class="panel">
+          <h2>Campaign total</h2>
+          <div class="tbl-wrap"><table><tbody id="campaign"></tbody></table></div>
+          <p id="campNote"></p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Papertrade: no open/close fee, no funding; mint basis is 98% of the loss while the queue is empty; liquidation fires about 5 bps before zero equity and forfeits the full margin. Winning closes lose a 0.2 bp deadband, then an impact haircut (baseRate 10%, rateMultiplier 15,000, referenceNotional $100k, positionMultiplier 814.598 BTC / 483.979 ETH), then a 2% win fee. <a href="https://docs.papertrade.xyz/#/how/asymmetric-impact" target="_blank" rel="noopener">Papertrade docs</a></span>
+    <span>Hyperliquid: perps fee tiers and HYPE staking discounts from the <a href="https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees" target="_blank" rel="noopener">fee schedule</a>. Taker fills pay half the spread versus Papertrade's mid. Max leverage BTC 40×, ETH 25×.</span>
+    <span>The mint rate falls as you mint: your own losses advance the LP high-water mark, so PAPER per cycle is integrated along the curve. Not financial advice.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const S = 120e6;
+  const DEADBAND = 1 / 50000;
+  const BASE = [[0.045,0.015],[0.040,0.012],[0.035,0.008],[0.030,0.004],[0.028,0],[0.026,0],[0.024,0]];
+  const VOL_THRESH = [0, 5e6, 25e6, 100e6, 500e6, 2e9, 7e9];
+  const STAKE = [[500000,'Diamond',0.40],[100000,'Platinum',0.30],[10000,'Gold',0.20],[1000,'Silver',0.15],[100,'Bronze',0.10],[10,'Wood',0.05]];
+  const MKT = { BTC: { pm: 814.598, maxLev: 40, spread: 0.12 }, ETH: { pm: 483.979, maxLev: 25, spread: 0.39 } };
+  const $ = id => document.getElementById(id);
+
+  const usd = (x, dp) => {
+    if (!isFinite(x)) return '–';
+    const neg = x < 0; x = Math.abs(x);
+    if (dp === undefined) dp = x >= 1000 ? 0 : x >= 1 ? 2 : 3;
+    return (neg ? '−$' : '$') + x.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  };
+  const num = (x, dp = 0) => isFinite(x) ? x.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '–';
+  const pct = (x, dp = 4) => isFinite(x) ? (x * 100).toFixed(dp).replace(/0+$/, '').replace(/\.$/, '') + '%' : '–';
+  const big = x => {
+    if (!isFinite(x)) return '–';
+    const a = Math.abs(x);
+    if (a >= 1e9) return (x / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return (x / 1e6).toFixed(2) + 'M';
+    if (a >= 1e3) return (x / 1e3).toFixed(1) + 'k';
+    return x.toFixed(0);
+  };
+
+  function stakeTier(h) {
+    for (const [t, name, d] of STAKE) if (h > t) return { name, d };
+    return { name: 'None', d: 0 };
+  }
+  function fees(hype, vol) {
+    const st = stakeTier(hype), b = BASE[vol];
+    return { taker: b[0] / 100 * (1 - st.d), maker: b[1] / 100 * (1 - st.d), st };
+  }
+  const rateAt = H => 100 * Math.pow(S / (S + H), 2);
+  const hFromRate = r => S * (Math.sqrt(100 / r) - 1);
+  const mintTail = (H0, B) => 100 * S * S * (1 / (S + H0) - 1 / (S + H0 + B));
+
+  // Winning close on Papertrade, per $1 of notional: deadband, then impact scale, then 2% fee.
+  function winParts(move, pm) {
+    const m = move - DEADBAND;
+    if (m <= 0) return { raw: move, deadband: move, impact: 0, fee: 0, net: 0 };
+    const scale = 0.9 / (1 + 1 / (m * 15000) + 0.1 / (m * pm));
+    const scaled = m * scale;
+    return { raw: move, deadband: DEADBAND, impact: m - scaled, fee: 0.02 * scaled, net: 0.98 * scaled };
+  }
+
+  function read() {
+    const v = id => parseFloat($(id).value);
+    const r = name => document.querySelector('input[name="' + name + '"]:checked').value;
+    return {
+      strat: r('strat'),
+      hype: v('hype') || 0, vol: parseInt($('vol').value, 10), openType: r('openType'), closeType: r('closeType'),
+      market: r('market'), notional: Math.max(0, v('notional') || 0), move: Math.max(0.0001, v('move') || 0) / 100,
+      lev: Math.min(1000, Math.max(1, v('lev') || 1)), spreadBps: Math.max(0, v('spread') || 0),
+      flat: $('flat').checked, H: Math.max(0, v('hwm') || 0) * 1e6, queue: $('queue').checked,
+      dir: r('dir'), fund: v('fund') || 0, hold: Math.max(0, v('hold') || 0), ww: r('ww'), target: Math.max(0, v('target') || 0)
+    };
+  }
+
+  const mintFor = (p, B) => p.flat ? 100 * B : mintTail(p.H, B);
+
+  function compute(p) {
+    const N = p.notional, m = p.move, mk = MKT[p.market];
+    const basisFactor = p.queue ? 1 : 0.98;
+    const basisIfLoss = N * m * basisFactor;
+    const liqMove = 1 / p.lev - 0.0005;
+    const liqBasis = N / p.lev;
+    const w = winParts(m, mk.pm);
+    const haircut = N * (m - w.net);
+
+    if (p.strat === 'pt2') {
+      const cost = haircut;
+      const paper = mintFor(p, basisIfLoss);
+      const wl = winParts(Math.max(liqMove, 0), mk.pm);
+      const liqCost = N / p.lev - N * wl.net;
+      return {
+        strat: 'pt2', N, m, w, haircut, basisIfLoss, expBasis: basisIfLoss, cost, paper,
+        perBasis: cost / basisIfLoss, per1k: cost / paper * 1000, avgRate: paper / basisIfLoss,
+        liqMove, liqBasis, liqCost, liqPer1k: liqCost / mintFor(p, liqBasis) * 1000,
+        ptMargin: 2 * N / p.lev, hlMargin: 0, hlBuffer: 0, capital: 2 * N / p.lev, hlVolumePerCycle: 0
+      };
+    }
+
+    const f = fees(p.hype, p.vol);
+    const openRate = p.openType === 'taker' ? f.taker : f.maker;
+    const closeRate = p.closeType === 'taker' ? f.taker : f.maker;
+    const half = p.spreadBps / 2 / 1e4;
+    const openFee = N * openRate, closeFee = N * closeRate;
+    const takerSides = (p.openType === 'taker') + (p.closeType === 'taker');
+    const spreadCost = N * half * takerSides;
+    const funding = N * (p.fund / 100) * (p.hold / 8760) * (p.dir === 'long' ? -1 : 1);
+    const unwind = p.ww === 'unwind';
+    const expBasis = unwind ? 0.5 * basisIfLoss : basisIfLoss;
+    const expHaircut = unwind ? 0.5 * haircut : 0;
+    const cost = openFee + closeFee + spreadCost + funding + expHaircut;
+    const paper = mintFor(p, expBasis);
+    const liqCost = N * 0.0005 + openFee + closeFee + spreadCost + funding;
+    const hlMargin = N / mk.maxLev, ptMargin = N / p.lev, hlBuffer = N * m;
+    return {
+      strat: 'hl', N, m, f, w, sideSpread: N * half, openRate, closeRate, openFee, closeFee, spreadCost, funding,
+      haircut, expHaircut, basisIfLoss, expBasis, cost, paper, perBasis: cost / expBasis, per1k: cost / paper * 1000,
+      avgRate: paper / expBasis, liqMove, liqBasis, liqCost, liqPer1k: liqCost / mintFor(p, liqBasis) * 1000,
+      ptMargin, hlMargin, hlBuffer, capital: ptMargin + hlMargin + hlBuffer, unwind, hlVolumePerCycle: 2 * N
+    };
+  }
+
+  function campaign(p, c) {
+    const P = p.target;
+    let B, endRate, impossible = false;
+    if (p.flat) { B = P / 100; endRate = 100; }
+    else {
+      const inv = 1 / (S + p.H) - P / (100 * S * S);
+      if (inv <= 0) { impossible = true; B = Infinity; }
+      else { B = 1 / inv - S - p.H; endRate = rateAt(p.H + B); }
+    }
+    const cycles = B / c.expBasis;
+    return { B, endRate, impossible, cycles, total: B * c.perBasis, hlVolume: cycles * c.hlVolumePerCycle,
+      ptVolume: cycles * 2 * c.N * (c.strat === 'pt2' ? 2 : 1), maxPaper: p.flat ? Infinity : 100 * S * S / (S + p.H) };
+  }
+
+  function rows(el, list) {
+    el.innerHTML = list.map(r => '<tr class="' + (r.cls || '') + '"><td>' + r[0] + '</td>' + r.slice(1).map(x => '<td class="n">' + x + '</td>').join('') + '</tr>').join('');
+  }
+  const row = (arr, cls) => Object.assign(arr, { cls });
+
+  function niceStep(x) {
+    if (x <= 0) return 1;
+    const e = Math.pow(10, Math.floor(Math.log10(x))), f = x / e;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e;
+  }
+
+  function drawChart(p) {
+    const svg = $('chart');
+    const W = 640, H = 260, L = 58, R = 18, T = 14, B = 34;
+    const xs = [0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.85, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
+    const lx = v => L + (Math.log(v) - Math.log(0.25)) / (Math.log(5) - Math.log(0.25)) * (W - L - R);
+    const at = (x, extra) => compute(Object.assign({}, p, { move: x / 100 }, extra)).per1k;
+    const a = xs.map(x => at(x, { strat: 'hl' }));
+    const b = xs.map(x => at(x, { strat: 'hl', openType: 'maker', closeType: 'maker' }));
+    const c = xs.map(x => at(x, { strat: 'pt2' }));
+    const finite = a.concat(b, c).filter(isFinite);
+    let ymax = Math.max(...finite, 0.01);
+    const ymin = Math.min(0, ...finite);
+    const step = niceStep((ymax - ymin) / 4);
+    ymax = Math.ceil(ymax / step) * step;
+    const y0 = Math.floor(ymin / step) * step;
+    const ly = v => T + (1 - (v - y0) / (ymax - y0)) * (H - T - B);
+    let s = '';
+    for (let v = y0; v <= ymax + 1e-9; v += step) {
+      s += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + ly(v) + '" y2="' + ly(v) + '"/>';
+      s += '<text x="' + (L - 8) + '" y="' + (ly(v) + 4) + '" text-anchor="end">' + usd(v, step < 0.1 ? 2 : step < 1 ? 1 : 0) + '</text>';
+    }
+    [0.25, 0.5, 1, 2, 5].forEach(x => {
+      s += '<text x="' + lx(x) + '" y="' + (H - 16) + '" text-anchor="middle">' + x + '%</text>';
+    });
+    const path = arr => arr.map((v, i) => (i ? 'L' : 'M') + lx(xs[i]).toFixed(1) + ' ' + ly(v).toFixed(1)).join(' ');
+    s += '<path class="line2" d="' + path(b) + '"/>';
+    s += '<path class="line3" d="' + path(c) + '"/>';
+    s += '<path class="line" d="' + path(a) + '"/>';
+    const mv = Math.min(5, Math.max(0.25, p.move * 100));
+    const cur = at(mv, {});
+    if (isFinite(cur)) {
+      const cx = lx(mv), cy = ly(cur);
+      const col = p.strat === 'pt2' ? 'var(--alt)' : 'var(--accent)';
+      s += '<circle class="dot" cx="' + cx + '" cy="' + cy + '" r="5" style="fill:' + col + '"/>';
+      const anchor = cx > W - 150 ? 'end' : 'start';
+      s += '<text x="' + (cx + (anchor === 'end' ? -10 : 10)) + '" y="' + (cy - 10) + '" text-anchor="' + anchor + '" style="fill:var(--ink);font-weight:600">' + (p.move * 100).toFixed(2).replace(/\.?0+$/, '') + '% → ' + usd(cur, 2) + '</text>';
+    }
+    s += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 1) + '" text-anchor="middle">price move before closing (log scale)</text>';
+    svg.innerHTML = s;
+  }
+
+  function render() {
+    const p = read();
+    const isPt = p.strat === 'pt2';
+    const c = compute(p);
+    const hl = compute(Object.assign({}, p, { strat: 'hl' }));
+    const pt = compute(Object.assign({}, p, { strat: 'pt2' }));
+
+    // Show/hide HL-only inputs
+    $('fsHl').hidden = isPt;
+    $('fsCarry').hidden = isPt;
+    $('panelStake').hidden = isPt;
+    $('stratHint').textContent = isPt
+      ? 'Long and short the same notional on Papertrade. When price moves your target, close both: one leg mints PAPER, the other pays out after the win haircut.'
+      : 'Long on Papertrade, short the same notional on Hyperliquid. Close both when the PT leg is down by your target move.';
+    $('heroTag').textContent = isPt ? 'Both legs on Papertrade' : 'PT + Hyperliquid hedge';
+    $('outPer1k').style.color = isPt ? 'var(--alt)' : '';
+
+    // Stake chip
+    if (!isPt) {
+      const st = c.f.st;
+      $('tierChip').textContent = st.name === 'None' ? 'No staking discount' : st.name + ' · ' + Math.round(st.d * 100) + '% off fees';
+      $('tierChip').className = 'chip' + (st.name === 'None' ? ' warn' : '');
+    }
+
+    // Liquidation chip
+    const maxSafe = Math.floor(1 / (c.m + 0.0005));
+    const safe = c.m < c.liqMove;
+    const legWord = isPt ? 'Losing PT leg' : 'PT leg';
+    $('liqChip').textContent = c.liqMove > 0
+      ? legWord + ' liquidates after a ' + pct(c.liqMove, 3) + ' move · ' + (safe ? 'clears your target' : 'before your target')
+      : 'Leverage too high';
+    $('liqChip').className = 'chip ' + (safe ? 'good' : 'bad');
+
+    // Hero
+    $('outPer1k').textContent = usd(c.per1k, 2);
+    $('outPerBasis').textContent = usd(c.perBasis, 4);
+    $('outCycleCost').textContent = usd(c.cost);
+    $('outCyclePaper').textContent = big(c.paper);
+    $('outAvgRate').innerHTML = num(c.avgRate, 1) + ' <small>PAPER/$</small>';
+
+    // Strategy comparison
+    const hlBetter = hl.per1k <= pt.per1k;
+    rows($('stratCompare'), [
+      row(['<span class="swatch" style="background:var(--accent)"></span>PT + HL hedge', usd(hl.per1k, 2), usd(hl.perBasis, 4), usd(hl.cost), usd(hl.capital)], hlBetter ? 'best' : ''),
+      row(['<span class="swatch" style="background:var(--alt)"></span>Both legs on PT', usd(pt.per1k, 2), usd(pt.perBasis, 4), usd(pt.cost), usd(pt.capital)], hlBetter ? '' : 'best')
+    ]);
+    // Crossover move where both strategies cost the same
+    let cross = null;
+    for (let x = 0.05; x <= 10; x += 0.01) {
+      const a = compute(Object.assign({}, p, { strat: 'hl', move: x / 100 })).perBasis;
+      const b = compute(Object.assign({}, p, { strat: 'pt2', move: x / 100 })).perBasis;
+      if (a <= b) { cross = x; break; }
+    }
+    const crossTxt = cross === null
+      ? 'With these settings the Hyperliquid hedge never beats both-on-Papertrade below a 10% move.'
+      : cross <= 0.05
+        ? 'With these settings the Hyperliquid hedge is cheaper at every move size.'
+        : 'Break-even is around a ' + cross.toFixed(2) + '% move: below it both-on-Papertrade is cheaper, above it the Hyperliquid hedge is.';
+    $('stratNote').textContent = crossTxt + ' Both-on-Papertrade always has one losing leg, so it carries no direction risk and needs no Hyperliquid account. Its winnings wait in the payout queue whenever the LP is short of cash.';
+
+    // Breakdown
+    if (isPt) {
+      const N = c.N;
+      rows($('breakdown'), [
+        ['Losing leg loss', usd(N * c.m)],
+        ['Winning leg raw gain', '<span class="neg">' + usd(-N * c.m) + '</span>'],
+        ['Deadband (0.2 bp)', usd(N * c.w.deadband)],
+        ['Impact haircut', usd(N * c.w.impact)],
+        ['2% win fee', usd(N * c.w.fee)],
+        row(['Net cost', usd(c.cost)], 'total'),
+        row(['Winner keeps', pct(c.w.net / c.m, 1) + ' of gain'], 'dim'),
+        row(['Mint basis', usd(c.expBasis)], 'dim')
+      ]);
+      $('breakNote').textContent = 'No exchange fees, spread or funding. The whole cost is what Papertrade keeps from the winning leg, and it shrinks only slowly as the move grows: it can never go below about 12% of the gain.';
+    } else {
+      const list = [
+        ['Papertrade open / close', usd(0, 0)],
+        ['HL open fee <span class="hint">(' + p.openType + ', ' + pct(c.openRate) + ')</span>', usd(c.openFee)],
+        ['HL close fee <span class="hint">(' + p.closeType + ', ' + pct(c.closeRate) + ')</span>', usd(c.closeFee)],
+        ['Spread vs PT mid', usd(c.spreadCost)],
+        ['Funding over ' + num(p.hold) + 'h', c.funding < 0 ? '<span class="neg">' + usd(c.funding) + '</span>' : usd(c.funding)]
+      ];
+      if (c.unwind) list.push(['Win haircut × 50% odds', usd(c.expHaircut)]);
+      list.push(row(['Net cost', usd(c.cost)], 'total'));
+      list.push(row(['PT loss (offset by HL gain)', usd(c.N * c.m)], 'dim'));
+      list.push(row(['Mint basis' + (c.unwind ? ' (expected)' : ''), usd(c.expBasis)], 'dim'));
+      rows($('breakdown'), list);
+      $('breakNote').textContent = c.unwind
+        ? 'Unwinding when the PT leg wins first costs ' + usd(c.haircut) + ' in haircut and mints nothing. With a 50/50 chance per cycle, that roughly triples the cost per PAPER.'
+        : 'Assumes the PT leg ends up the loser. If price runs the other way, you keep holding both legs and pay or earn funding while you wait.';
+
+      // Compare staking tiers
+      const sv = compute(Object.assign({}, p, { hype: 1001 }));
+      const gd = compute(Object.assign({}, p, { hype: 10001 }));
+      const n = c.N || 1;
+      const per1M = x => usd(x / n * 1e6, 0);
+      const oS = p.openType === 'taker' ? c.sideSpread : 0, cS = p.closeType === 'taker' ? c.sideSpread : 0;
+      rows($('compare'), [
+        ['Taker / maker rate', pct(sv.f.taker) + ' / ' + pct(sv.f.maker), pct(gd.f.taker) + ' / ' + pct(gd.f.maker)],
+        ['Open per $1M', per1M(sv.openFee + oS), per1M(gd.openFee + oS)],
+        ['Close per $1M', per1M(sv.closeFee + cS), per1M(gd.closeFee + cS)],
+        ['Cycle net cost', usd(sv.cost), usd(gd.cost)],
+        ['Per $1 basis', usd(sv.perBasis, 4), usd(gd.perBasis, 4)],
+        row(['Per 1,000 PAPER', usd(sv.per1k, 3), usd(gd.per1k, 3)], 'total')
+      ]);
+    }
+
+    // Capital & liquidation
+    const la = $('liqAlert');
+    if (c.liqMove <= 0) {
+      la.className = 'alert bad';
+      la.textContent = 'At ' + num(p.lev) + '× the position is liquidated almost immediately.';
+    } else if (!safe) {
+      la.className = 'alert bad';
+      la.textContent = 'At ' + num(p.lev) + '× the ' + (isPt ? 'losing ' : '') + 'PT leg is liquidated after ' + pct(c.liqMove, 3) + ', before your ' + pct(c.m, 3) + ' target. Liquidation costs ' + usd(c.liqPer1k, 2) + ' per 1,000 PAPER. Use ' + maxSafe + '× or less.';
+    } else {
+      la.className = 'alert ok';
+      la.textContent = 'Safe up to ' + maxSafe + '× for a ' + pct(c.m, 3) + ' target. Getting liquidated instead would cost ' + usd(c.liqPer1k, 2) + ' per 1,000 PAPER.';
+    }
+    if (isPt) {
+      rows($('capital'), [
+        ['Long margin', usd(c.N / p.lev)],
+        ['Short margin', usd(c.N / p.lev)],
+        row(['Total capital', usd(c.capital)], 'total')
+      ]);
+    } else {
+      rows($('capital'), [
+        ['Papertrade margin', usd(c.ptMargin)],
+        ['HL initial margin (' + MKT[p.market].maxLev + '×)', usd(c.hlMargin)],
+        ['HL buffer for a ' + pct(c.m, 3) + ' move against it', usd(c.hlBuffer)],
+        row(['Total capital, roughly', usd(c.capital)], 'total')
+      ]);
+    }
+
+    // Campaign
+    const k = campaign(p, c);
+    if (k.impossible) {
+      rows($('campaign'), [['Target', big(p.target) + ' PAPER'], ['Max mintable from here', big(k.maxPaper) + ' PAPER']]);
+      $('campNote').textContent = 'The curve is asymptotic: from the current LP gain, total future minting tops out near ' + big(k.maxPaper) + ' PAPER. Lower the target.';
+    } else {
+      const list = [
+        ['Mint basis needed', usd(k.B)],
+        ['Cycles at ' + usd(c.N) + ' notional', num(Math.ceil(k.cycles))]
+      ];
+      if (isPt) list.push(['Papertrade notional traded', '$' + big(k.ptVolume)]);
+      else list.push(['HL volume generated', '$' + big(k.hlVolume)]);
+      list.push(['Mint rate after', num(k.endRate, 1) + ' /$']);
+      list.push(row(['Total cost', usd(k.total)], 'total'));
+      rows($('campaign'), list);
+      let tierReached = 0;
+      VOL_THRESH.forEach((t, i) => { if (k.hlVolume > t) tierReached = i; });
+      $('campNote').textContent = (!isPt && tierReached > p.vol
+        ? 'This volume would lift you to volume tier ' + tierReached + ' within 14 days, so real fees come in lower than shown. '
+        : '') + 'Every trader’s losses move the rate, so the live rate will drift lower than this while you mint.';
+    }
+
+    drawChart(p);
+  }
+
+  // Link rate <-> H
+  $('rate').addEventListener('input', () => {
+    const r = parseFloat($('rate').value);
+    if (r > 0 && r <= 100) $('hwm').value = (hFromRate(r) / 1e6).toFixed(2);
+  });
+  $('hwm').addEventListener('input', () => {
+    const h = parseFloat($('hwm').value);
+    if (h >= 0) $('rate').value = rateAt(h * 1e6).toFixed(1);
+  });
+  $('flat').addEventListener('change', () => {
+    const on = $('flat').checked;
+    $('rate').disabled = on; $('hwm').disabled = on;
+  });
+  document.querySelectorAll('input[name="market"]').forEach(el => el.addEventListener('change', () => {
+    $('spread').value = MKT[el.value].spread;
+  }));
+  $('form').addEventListener('input', render);
+  $('form').addEventListener('change', render);
+  $('form').addEventListener('submit', e => e.preventDefault());
+  render();
+})();
+</script>
+
+</body></html>
