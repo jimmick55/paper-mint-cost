@@ -125,6 +125,14 @@ tr.best td:first-child::after { content: "cheaper"; margin-left: 8px; font-size:
 .legend i { display: inline-block; width: 16px; height: 0; border-top: 2.25px solid var(--accent); vertical-align: middle; margin-right: 6px; }
 .legend i.d { border-top: 1.5px dashed var(--accent); }
 .legend i.a { border-top-color: var(--alt); }
+.live { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--accent); border-radius: 8px; background: var(--accent-soft); min-width: 0; }
+.live-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ext { font-size: 13px; font-weight: 600; color: var(--accent); }
+textarea { width: 100%; font-family: var(--font-num); font-size: 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; resize: vertical; min-width: 0; }
+textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.snap { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12.5px; }
+.snap dt { color: var(--muted); }
+.snap dd { margin: 0; text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 footer { margin-top: 26px; font-size: 12px; color: var(--muted); display: grid; gap: 4px; max-width: 90ch; }
 footer a { color: var(--accent); }
 </style>
@@ -219,18 +227,28 @@ footer a { color: var(--accent); }
 
       <fieldset>
         <legend>Papertrade mint state</legend>
+        <div class="live">
+          <div class="live-head">
+            <span class="lbl">Live rate from Papertrade</span>
+            <a class="ext" href="https://exchange.papertrade.xyz/query/protocol/summary" target="_blank" rel="noopener">Open summary ↗</a>
+          </div>
+          <span class="hint">Open the summary, select all, copy, and paste it here. Everything below fills in from it.</span>
+          <textarea id="snap" rows="2" spellcheck="false" placeholder='Paste {"ok":true,"source":…} here'></textarea>
+          <span class="chip" id="snapChip">No live data yet · using the values below</span>
+          <dl class="snap" id="snapStats" hidden></dl>
+        </div>
         <label class="check"><input type="checkbox" id="flat"> <span>LP is below $2M (flat region, 100 PAPER per $1)</span></label>
         <div class="row2">
           <div class="field">
             <label for="rate">Current mint rate (PAPER/$)</label>
-            <input type="number" id="rate" min="1" max="100" step="0.1" value="85">
+            <input type="number" id="rate" min="0.01" max="100" step="0.01" value="18.79">
           </div>
           <div class="field">
             <label for="hwm">LP gain past $2M ($M)</label>
-            <input type="number" id="hwm" min="0" step="0.1" value="10.16">
+            <input type="number" id="hwm" min="0" step="0.1" value="156.80">
           </div>
         </div>
-        <span class="hint">Example value. Read the live rate from your Paper tab; the two fields update each other via 100 × (120 / (120 + H))².</span>
+        <span class="hint">Filled from the summary when you paste it, or type your own. The two fields update each other via 100 × (120 / (120 + H))².</span>
         <label class="check"><input type="checkbox" id="queue"> <span>Payout queue is active (no 2% carve on losses; PT winnings wait in the queue)</span></label>
       </fieldset>
 
@@ -352,7 +370,7 @@ footer a { color: var(--accent); }
 
 <script>
 (function () {
-  const S = 120e6;
+  let S = 120e6, FLAT = 100;
   const DEADBAND = 1 / 50000;
   const BASE = [[0.045,0.015],[0.040,0.012],[0.035,0.008],[0.030,0.004],[0.028,0],[0.026,0],[0.024,0]];
   const VOL_THRESH = [0, 5e6, 25e6, 100e6, 500e6, 2e9, 7e9];
@@ -385,9 +403,9 @@ footer a { color: var(--accent); }
     const st = stakeTier(hype), b = BASE[vol];
     return { taker: b[0] / 100 * (1 - st.d), maker: b[1] / 100 * (1 - st.d), st };
   }
-  const rateAt = H => 100 * Math.pow(S / (S + H), 2);
-  const hFromRate = r => S * (Math.sqrt(100 / r) - 1);
-  const mintTail = (H0, B) => 100 * S * S * (1 / (S + H0) - 1 / (S + H0 + B));
+  const rateAt = H => FLAT * Math.pow(S / (S + H), 2);
+  const hFromRate = r => S * (Math.sqrt(FLAT / r) - 1);
+  const mintTail = (H0, B) => FLAT * S * S * (1 / (S + H0) - 1 / (S + H0 + B));
 
   // Winning close on Papertrade, per $1 of notional: deadband, then impact scale, then 2% fee.
   function winParts(move, pm) {
@@ -411,7 +429,7 @@ footer a { color: var(--accent); }
     };
   }
 
-  const mintFor = (p, B) => p.flat ? 100 * B : mintTail(p.H, B);
+  const mintFor = (p, B) => p.flat ? FLAT * B : mintTail(p.H, B);
 
   function compute(p) {
     const N = p.notional, m = p.move, mk = MKT[p.market];
@@ -461,15 +479,15 @@ footer a { color: var(--accent); }
   function campaign(p, c) {
     const P = p.target;
     let B, endRate, impossible = false;
-    if (p.flat) { B = P / 100; endRate = 100; }
+    if (p.flat) { B = P / FLAT; endRate = FLAT; }
     else {
-      const inv = 1 / (S + p.H) - P / (100 * S * S);
+      const inv = 1 / (S + p.H) - P / (FLAT * S * S);
       if (inv <= 0) { impossible = true; B = Infinity; }
       else { B = 1 / inv - S - p.H; endRate = rateAt(p.H + B); }
     }
     const cycles = B / c.expBasis;
     return { B, endRate, impossible, cycles, total: B * c.perBasis, hlVolume: cycles * c.hlVolumePerCycle,
-      ptVolume: cycles * 2 * c.N * (c.strat === 'pt2' ? 2 : 1), maxPaper: p.flat ? Infinity : 100 * S * S / (S + p.H) };
+      ptVolume: cycles * 2 * c.N * (c.strat === 'pt2' ? 2 : 1), maxPaper: p.flat ? Infinity : FLAT * S * S / (S + p.H) };
   }
 
   function rows(el, list) {
@@ -682,6 +700,85 @@ footer a { color: var(--accent); }
 
     drawChart(p);
   }
+
+  // ---- Live protocol summary (pasted JSON) ----
+  const HIST_KEY = 'paperSnapHistory';
+  const fx = s => { const n = Number(s); return isFinite(n) ? n / 1e18 : NaN; };
+  function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch (e) { return []; } }
+  function saveHist(h) { try { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(-20))); } catch (e) {} }
+  const ago = ms => { const m = Math.round(ms / 60000); return m < 60 ? m + ' min' : m < 2880 ? (m / 60).toFixed(1) + ' h' : (m / 1440).toFixed(1) + ' d'; };
+
+  function parseSnap(text) {
+    let j;
+    try { j = JSON.parse(text.trim()); } catch (e) { return { error: 'That isn’t valid JSON. Copy the whole summary page, including the outer { }.' }; }
+    const p = j && j.paper, b = j && j.balances;
+    if (!p || p.tailProgress === undefined || p.trackedLp === undefined) return { error: 'This JSON has no paper.tailProgress field. Paste the protocol summary from the link above.' };
+    const snap = {
+      at: j.source && j.source.at ? Number(j.source.at) : Date.now(),
+      block: j.source && j.source.block,
+      flat: fx(p.rate) || 100, S: fx(p.decay) || 120e6, cliff: isFinite(fx(p.cliff)) ? fx(p.cliff) : 2e6,
+      H: fx(p.tailProgress), tracked: fx(p.trackedLp), supply: fx(p.supply), staked: fx(p.staked),
+      queue: b ? fx(b.queue) : 0, lp: b ? fx(b.lp) : NaN, tvl: b ? fx(b.tvl) : NaN
+    };
+    snap.inFlat = snap.tracked < snap.cliff;
+    snap.rate = snap.inFlat ? snap.flat : snap.flat * Math.pow(snap.S / (snap.S + snap.H), 2);
+    snap.remaining = snap.flat * snap.S * snap.S / (snap.S + snap.H);
+    return { snap };
+  }
+
+  function applySnap(snap, record) {
+    S = snap.S; FLAT = snap.flat;
+    $('flat').checked = snap.inFlat;
+    $('rate').disabled = snap.inFlat; $('hwm').disabled = snap.inFlat;
+    $('hwm').value = (snap.H / 1e6).toFixed(2);
+    $('rate').value = rateAt(snap.H).toFixed(2);
+    $('queue').checked = snap.queue > 0;
+
+    let hist = loadHist();
+    if (record && !hist.some(h => h.at === snap.at)) { hist.push({ at: snap.at, rate: snap.rate, H: snap.H }); hist.sort((a, b) => a.at - b.at); saveHist(hist); }
+    const prev = hist.filter(h => h.at < snap.at).pop();
+
+    const chip = $('snapChip');
+    const age = Date.now() - snap.at;
+    chip.textContent = 'Live rate ' + snap.rate.toFixed(2) + ' PAPER/$ · as of ' + ago(Math.max(0, age)) + ' ago';
+    chip.className = 'chip' + (age > 6 * 3600e3 ? ' warn' : '');
+
+    const rows = [
+      ['Mint rate', snap.rate.toFixed(2) + ' /$' + (snap.inFlat ? ' (flat)' : '')],
+      ['LP gain past $2M', '$' + (snap.H / 1e6).toFixed(2) + 'M'],
+      ['Tracked LP', '$' + (snap.tracked / 1e6).toFixed(2) + 'M'],
+      ['Payout queue', snap.queue > 0 ? '$' + Math.round(snap.queue).toLocaleString('en-US') + ' (active)' : 'empty'],
+      ['PAPER supply', (snap.supply / 1e9).toFixed(3) + 'B (' + (snap.staked / snap.supply * 100).toFixed(1) + '% staked)'],
+      ['Left to mint, ever', snap.inFlat ? '–' : (snap.remaining / 1e9).toFixed(2) + 'B']
+    ];
+    if (prev) {
+      const hrs = (snap.at - prev.at) / 3600e3;
+      const perH = hrs > 0 ? Math.log(prev.rate / snap.rate) / hrs : 0;
+      const lossPerH = hrs > 0 ? (snap.H - prev.H) / hrs : 0;
+      rows.push(['Since your last paste', ago(snap.at - prev.at) + ' ago']);
+      rows.push(['Rate change', (perH >= 0 ? '−' : '+') + Math.abs(perH * 100).toFixed(2) + '% per hour']);
+      rows.push(['Others’ losses', '$' + (lossPerH / 1e6).toFixed(2) + 'M per hour']);
+    }
+    const dl = $('snapStats');
+    dl.innerHTML = rows.map(r => '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>').join('');
+    dl.hidden = false;
+  }
+
+  function onSnapInput() {
+    const text = $('snap').value;
+    if (!text.trim()) return;
+    const r = parseSnap(text);
+    if (r.error) { $('snapChip').textContent = r.error; $('snapChip').className = 'chip bad'; return; }
+    applySnap(r.snap, true);
+    try { localStorage.setItem('paperSnapLast', text.trim()); } catch (e) {}
+    render();
+  }
+  $('snap').addEventListener('input', onSnapInput);
+  // Restore the last pasted summary for this viewer
+  try {
+    const last = localStorage.getItem('paperSnapLast');
+    if (last) { const r = parseSnap(last); if (r.snap) applySnap(r.snap, false); }
+  } catch (e) {}
 
   // Link rate <-> H
   $('rate').addEventListener('input', () => {
