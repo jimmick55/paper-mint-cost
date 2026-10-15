@@ -1,0 +1,487 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PAPER Pair Close Targets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: order ticket on the left, exit plan on the right — two target prices up top, then a price ladder, then the full table. */
+:root {
+  --bg: #EEF2F1;
+  --surface: #FFFFFF;
+  --sunken: #E3E9E7;
+  --ink: #13201E;
+  --muted: #566664;
+  --line: #D2DBD8;
+  --accent: #0B6B62;
+  --accent-soft: #D3EAE6;
+  --down: #B3261E;
+  --down-soft: #F8DEDB;
+  --up: #1D6FA8;
+  --up-soft: #DCEBF6;
+  --warn: #9A6200;
+  --warn-soft: #F7EAD2;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1413; --surface: #141E1C; --sunken: #1B2725; --ink: #E3ECEA; --muted: #92A4A1; --line: #26342F;
+    --accent: #4CC2B3; --accent-soft: #173A35; --down: #F08A80; --down-soft: #3D1D1A; --up: #7DB8E8; --up-soft: #16293A;
+    --warn: #E3AE52; --warn-soft: #3A2D14; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1413; --surface: #141E1C; --sunken: #1B2725; --ink: #E3ECEA; --muted: #92A4A1; --line: #26342F;
+  --accent: #4CC2B3; --accent-soft: #173A35; --down: #F08A80; --down-soft: #3D1D1A; --up: #7DB8E8; --up-soft: #16293A;
+  --warn: #E3AE52; --warn-soft: #3A2D14; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; margin-bottom: 22px; }
+h1 { font-family: var(--font-display); font-stretch: 78%; font-weight: 800; font-size: clamp(28px, 4.2vw, 40px); letter-spacing: -0.01em; margin: 0; line-height: 1; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 64ch; }
+.asof { font-family: var(--font-num); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.layout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 880px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.ticket { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+fieldset { border: 0; margin: 0; padding: 16px 18px; display: grid; gap: 12px; border-top: 1px solid var(--line); min-width: 0; }
+fieldset:first-child { border-top: 0; }
+legend { float: left; width: 100%; padding: 0; margin-bottom: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+legend + * { clear: both; }
+.row2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.row3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.field { display: grid; gap: 5px; min-width: 0; align-content: start; }
+.field > label, .lbl { font-size: 13px; font-weight: 600; }
+.hint { font-size: 12px; color: var(--muted); }
+input[type="number"] {
+  width: 100%; font-family: var(--font-num); font-size: 14px; color: var(--ink); background: var(--sunken);
+  border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; min-width: 0;
+}
+input.hl { background: var(--surface); border-color: var(--accent); }
+input:focus-visible, .seg input:focus-visible + span, .check input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg { display: flex; background: var(--sunken); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 3px; }
+.seg label { flex: 1; position: relative; min-width: 0; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span { display: block; text-align: center; font-size: 13px; font-weight: 600; padding: 6px 4px; border-radius: 6px; color: var(--muted); cursor: pointer; }
+.seg input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+.check { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.chip { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); width: fit-content; max-width: 100%; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--down-soft); color: var(--down); }
+
+.results { display: grid; gap: 18px; min-width: 0; }
+.verdict { border-radius: var(--r); padding: 14px 18px; display: grid; gap: 4px; border: 1px solid var(--line); background: var(--surface); }
+.verdict strong { font-family: var(--font-display); font-stretch: 85%; font-size: 20px; font-weight: 800; }
+.verdict span { font-size: 13px; color: var(--muted); }
+.verdict.hold { border-left: 6px solid var(--muted); }
+.verdict.close { border-left: 6px solid var(--accent); background: var(--accent-soft); }
+.verdict.danger { border-left: 6px solid var(--down); background: var(--down-soft); }
+.verdict.close strong { color: var(--accent); }
+.verdict.danger strong { color: var(--down); }
+
+.targets { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+@media (max-width: 560px) { .targets { grid-template-columns: minmax(0,1fr); } }
+.tgt { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
+.tgt .k { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.tgt.down .k { color: var(--down); }
+.tgt.up .k { color: var(--up); }
+.price-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.price { font-family: var(--font-num); font-weight: 600; font-size: clamp(30px, 4.4vw, 42px); letter-spacing: -0.02em; line-height: 1; }
+.tgt.down .price { color: var(--down); }
+.tgt.up .price { color: var(--up); }
+.copy { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--muted); background: var(--sunken); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.copy:hover { color: var(--ink); }
+.tgt dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; }
+.tgt dt { color: var(--muted); }
+.tgt dd { margin: 0; text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { font-family: var(--font-display); font-stretch: 85%; font-size: 17px; font-weight: 700; margin: 0; text-wrap: balance; }
+.panel p { margin: 0; color: var(--muted); font-size: 13px; max-width: 70ch; }
+.ladder { width: 100%; height: auto; display: block; overflow: visible; }
+.ladder text { font-family: var(--font-num); font-size: 11px; fill: var(--muted); }
+.ladder .lab { font-weight: 600; }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+td.n, th.n { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; padding-right: 0; padding-left: 12px; }
+td.dn { color: var(--down); }
+td.upc { color: var(--up); }
+tr.rec td { background: var(--accent-soft); font-weight: 600; }
+tr.rec td:first-child { box-shadow: inset 4px 0 0 var(--accent); padding-left: 8px; }
+tr.bad td { color: var(--muted); text-decoration: line-through; }
+tr.thin td { color: var(--muted); }
+footer { margin-top: 26px; font-size: 12px; color: var(--muted); display: grid; gap: 4px; max-width: 90ch; }
+footer a { color: var(--accent); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>PAPER Pair Close Targets</h1>
+      <p class="sub">You have a long and a short open on Papertrade at the same size. Enter where you opened them and how fast the mint rate is falling, and this gives the prices to close both legs at.</p>
+    </div>
+    <span class="asof">Wait times from Hyperliquid 5m candles, Sep 27 – Oct 14, 2026</span>
+  </header>
+
+  <div class="layout">
+    <form class="ticket" id="form" autocomplete="off">
+      <fieldset>
+        <legend>Your open pair</legend>
+        <div class="field">
+          <span class="lbl" id="mktLbl">Market</span>
+          <div class="seg" role="radiogroup" aria-labelledby="mktLbl">
+            <label><input type="radio" name="market" id="mktEth" value="ETH" checked><span>ETH</span></label>
+            <label><input type="radio" name="market" id="mktBtc" value="BTC"><span>BTC</span></label>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="longEntry">Long entry</label>
+            <input type="number" id="longEntry" step="0.01" value="2421.05" class="hl">
+          </div>
+          <div class="field">
+            <label for="shortEntry">Short entry</label>
+            <input type="number" id="shortEntry" step="0.01" value="2421.05" class="hl">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="notional">Notional per leg ($)</label>
+            <input type="number" id="notional" min="0" step="10000" value="1000000">
+          </div>
+          <div class="field">
+            <label for="lev">Leverage (×)</label>
+            <input type="number" id="lev" min="1" max="1000" step="1" value="30">
+          </div>
+        </div>
+        <div class="field">
+          <label for="current">Current price <span class="hint">(optional)</span></label>
+          <input type="number" id="current" step="0.01" value="2412.40" class="hl">
+          <span class="hint">Fill this in to see whether to close now.</span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Mint rate</legend>
+        <div class="row3">
+          <div class="field">
+            <label for="rateNow">Now</label>
+            <input type="number" id="rateNow" min="0.01" step="0.01" value="19.65">
+          </div>
+          <div class="field">
+            <label for="rateThen">Earlier</label>
+            <input type="number" id="rateThen" min="0" step="0.01" value="20.30">
+          </div>
+          <div class="field">
+            <label for="mins">Minutes apart</label>
+            <input type="number" id="mins" min="1" step="1" value="60">
+          </div>
+        </div>
+        <span class="chip warn" id="decayChip">Falling 3.2% per hour</span>
+        <span class="hint">Read both from your Paper tab. Leave "Earlier" at 0 if the rate isn't moving.</span>
+        <label class="check"><input type="checkbox" id="queue"> <span>Payout queue is active (PAPER mints on the full loss, no 2% carve)</span></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Target</legend>
+        <div class="field">
+          <label for="override">Close at move (%) <span class="hint">(blank = recommended)</span></label>
+          <input type="number" id="override" min="0.05" step="0.05" placeholder="auto">
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="results">
+      <div class="verdict hold" id="verdict" aria-live="polite">
+        <strong id="vTitle">Hold</strong>
+        <span id="vBody"></span>
+      </div>
+
+      <div class="targets">
+        <div class="tgt down">
+          <span class="k">Close both if price falls to</span>
+          <div class="price-row"><span class="price" id="pDown">–</span><button type="button" class="copy" data-copy="pDown">Copy</button></div>
+          <dl>
+            <dt>Losing leg</dt><dd>Long</dd>
+            <dt>PAPER minted</dt><dd id="dPaper">–</dd>
+            <dt>Net cost</dt><dd id="dCost">–</dd>
+            <dt>Per 1,000 PAPER</dt><dd id="dPer">–</dd>
+          </dl>
+        </div>
+        <div class="tgt up">
+          <span class="k">Close both if price rises to</span>
+          <div class="price-row"><span class="price" id="pUp">–</span><button type="button" class="copy" data-copy="pUp">Copy</button></div>
+          <dl>
+            <dt>Losing leg</dt><dd>Short</dd>
+            <dt>PAPER minted</dt><dd id="uPaper">–</dd>
+            <dt>Net cost</dt><dd id="uCost">–</dd>
+            <dt>Per 1,000 PAPER</dt><dd id="uPer">–</dd>
+          </dl>
+        </div>
+      </div>
+
+      <section class="panel">
+        <h2 id="ladderTitle">Price map</h2>
+        <svg class="ladder" id="ladder" viewBox="0 0 640 120" role="img" aria-label="Entry, close targets, current price and liquidation prices on one scale"></svg>
+        <p id="ladderNote"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Every close target</h2>
+        <p id="recNote"></p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Move</th><th class="n">Falls to</th><th class="n">Rises to</th><th class="n">PAPER</th><th class="n">Net cost</th><th class="n">$/1k now</th><th class="n">$/1k after wait</th><th class="n">Avg wait</th></tr></thead>
+            <tbody id="table"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <span>Cost is the winning leg's haircut: 0.2 bp deadband, then the impact curve (baseRate 10%, rateMultiplier 15,000, referenceNotional $100k, positionMultiplier 483.979 ETH / 814.598 BTC), then a 2% win fee. It matched real ETH pairs to 0.1%. Losing legs pay nothing extra. <a href="https://docs.papertrade.xyz/#/how/asymmetric-impact" target="_blank" rel="noopener">Papertrade docs</a></span>
+    <span>"$/1k after wait" assumes the rate keeps falling at your measured speed for the average time price took to make that move. The recommended target is the move with the lowest such cost, never under 0.5%, and at least 0.15% inside liquidation.</span>
+    <span>Liquidation fires about 5 bps before zero equity and takes the full margin. Not financial advice.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const MKT = {
+    ETH: { pm: 483.979, waits: [[0.25,1.22],[0.5,3.77],[0.75,6.19],[1,9.74],[1.25,13.92],[1.5,17.78],[2,26.0],[2.5,37.01],[3,48.57]] },
+    BTC: { pm: 814.598, waits: [[0.25,1.69],[0.5,5.18],[0.75,8.7],[1,12.04],[1.25,15.95],[1.5,20.35],[2,29.0],[2.5,37.54],[3,59.12]] }
+  };
+  const ROWS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
+  const MIN_MOVE = 0.005, LIQ_PAD = 0.0015;
+  const $ = id => document.getElementById(id);
+
+  const usd = (x, dp) => {
+    if (!isFinite(x)) return '–';
+    const neg = x < 0; x = Math.abs(x);
+    if (dp === undefined) dp = x >= 1000 ? 0 : 2;
+    return (neg ? '−$' : '$') + x.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  };
+  const px = (x, mk) => isFinite(x) ? x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '–';
+  const num = (x, dp = 0) => isFinite(x) ? x.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '–';
+  const pc = (x, dp = 2) => isFinite(x) ? (x * 100).toFixed(dp) + '%' : '–';
+  const hrs = h => !isFinite(h) ? '–' : h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toFixed(h < 10 ? 1 : 0) + ' h' : (h / 24).toFixed(1) + ' d';
+
+  function keptPerNotional(move, pm) {          // winner's payout per $1 notional
+    const m = move - 1 / 50000;
+    if (m <= 0) return 0;
+    return 0.98 * m * 0.9 / (1 + 1 / (m * 15000) + 0.1 / (m * pm));
+  }
+  function waitFor(move, mk) {                   // average hours to a +/- move, interpolated
+    const w = MKT[mk].waits, x = move * 100;
+    if (x <= w[0][0]) return w[0][1] * (x / w[0][0]) * (x / w[0][0]);
+    for (let i = 1; i < w.length; i++) {
+      if (x <= w[i][0]) {
+        const [x0, y0] = w[i - 1], [x1, y1] = w[i];
+        return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+      }
+    }
+    const [xl, yl] = w[w.length - 1];
+    return yl * (x / xl) * (x / xl);
+  }
+
+  function read() {
+    const v = id => parseFloat($(id).value);
+    const mk = document.querySelector('input[name="market"]:checked').value;
+    const rNow = v('rateNow'), rThen = v('rateThen'), mins = v('mins');
+    let decay = 0;
+    if (rNow > 0 && rThen > 0 && mins > 0) decay = Math.log(rThen / rNow) / (mins / 60);
+    return {
+      mk, le: v('longEntry'), se: v('shortEntry'), N: Math.max(0, v('notional') || 0), lev: Math.min(1000, Math.max(1, v('lev') || 1)),
+      cur: v('current'), rate: rNow > 0 ? rNow : NaN, decay, queue: $('queue').checked, override: v('override') / 100
+    };
+  }
+
+  // Outcome of closing both legs at price p
+  function closeAt(s, p) {
+    const pm = MKT[s.mk].pm;
+    const longMove = (p - s.le) / s.le, shortMove = (s.se - p) / s.se;
+    const loserMove = Math.min(longMove, shortMove);   // negative = loss
+    const winnerMove = Math.max(longMove, shortMove);
+    const loss = Math.max(0, -loserMove) * s.N;
+    const winRaw = Math.max(0, winnerMove) * s.N;
+    const winKept = keptPerNotional(Math.max(0, winnerMove), pm) * s.N;
+    const cost = loss - winKept;
+    const basis = loss * (s.queue ? 1 : 0.98);
+    const paper = basis * s.rate;
+    return { p, loserLeg: longMove < shortMove ? 'long' : 'short', loss, winRaw, winKept, cost, paper,
+      per1k: paper > 0 ? cost / paper * 1000 : Infinity, haircutPct: loss > 0 ? cost / loss : NaN, loserMove: -loserMove };
+  }
+
+  function planFor(s, m) {
+    const down = closeAt(s, s.le * (1 - m));
+    const up = closeAt(s, s.se * (1 + m));
+    const wait = waitFor(m, s.mk);
+    const grow = Math.exp(Math.max(0, s.decay) * wait);
+    return { m, down, up, wait, avgPer1k: (down.per1k + up.per1k) / 2, afterWait: (down.per1k + up.per1k) / 2 * grow };
+  }
+
+  function render() {
+    const s = read();
+    const liqMove = 1 / s.lev - 0.0005;
+    const maxSafe = liqMove - LIQ_PAD;
+    const liqLong = s.le * (1 - liqMove), liqShort = s.se * (1 + liqMove);
+
+    // Decay chip
+    const dch = $('decayChip');
+    if (s.decay > 0.0005) { dch.textContent = 'Falling ' + (s.decay * 100).toFixed(1) + '% per hour'; dch.className = 'chip warn'; }
+    else if (s.decay < -0.0005) { dch.textContent = 'Rising ' + (-s.decay * 100).toFixed(1) + '% per hour'; dch.className = 'chip'; }
+    else { dch.textContent = 'Rate steady'; dch.className = 'chip'; }
+
+    // Recommended move: min cost after wait over a fine grid
+    let best = null;
+    const hi = Math.min(0.03, maxSafe);
+    for (let m = MIN_MOVE; m <= hi + 1e-9; m += 0.0005) {
+      const pl = planFor(s, m);
+      if (!best || pl.afterWait < best.afterWait - 1e-9) best = pl;
+    }
+    const auto = best ? best.m : NaN;
+    const useOverride = isFinite(s.override) && s.override > 0;
+    const m = useOverride ? s.override : auto;
+    const plan = isFinite(m) ? planFor(s, m) : null;
+
+    // Targets
+    if (plan) {
+      $('pDown').textContent = px(plan.down.p);
+      $('pUp').textContent = px(plan.up.p);
+      $('dPaper').textContent = num(plan.down.paper);
+      $('dCost').textContent = usd(plan.down.cost);
+      $('dPer').textContent = usd(plan.down.per1k, 2);
+      $('uPaper').textContent = num(plan.up.paper);
+      $('uCost').textContent = usd(plan.up.cost);
+      $('uPer').textContent = usd(plan.up.per1k, 2);
+    }
+
+    // Verdict
+    const vt = $('vTitle'), vb = $('vBody'), vd = $('verdict');
+    if (!plan) {
+      vd.className = 'verdict danger'; vt.textContent = 'Leverage too high';
+      vb.textContent = 'At ' + num(s.lev) + '× the losing leg liquidates before a 0.5% move. Lower the leverage on your next pair.';
+    } else if (!isFinite(s.cur)) {
+      vd.className = 'verdict hold'; vt.textContent = 'Target: ' + pc(m) + ' move';
+      vb.textContent = 'Close both legs at ' + px(plan.down.p) + ' or ' + px(plan.up.p) + '. Add the current price to see where you stand.';
+    } else {
+      const now = closeAt(s, s.cur);
+      const nearLiq = s.cur <= liqLong * (1 + LIQ_PAD) || s.cur >= liqShort * (1 - LIQ_PAD);
+      if (nearLiq) {
+        vd.className = 'verdict danger'; vt.textContent = 'Close now: near liquidation';
+        vb.textContent = 'The ' + now.loserLeg + ' leg is within 0.15% of its liquidation price (' + px(now.loserLeg === 'long' ? liqLong : liqShort) + '). Liquidation takes the full margin.';
+      } else if (s.cur <= plan.down.p || s.cur >= plan.up.p) {
+        vd.className = 'verdict close'; vt.textContent = 'Close both legs now';
+        vb.textContent = 'Price has moved ' + pc(now.loserMove) + ' against the ' + now.loserLeg + '. Closing now mints ' + num(now.paper) + ' PAPER for ' + usd(now.cost) + ' (' + usd(now.per1k, 2) + ' per 1,000).';
+      } else if (now.loserMove < MIN_MOVE) {
+        vd.className = 'verdict hold'; vt.textContent = 'Hold';
+        const hc = isFinite(now.haircutPct) ? pc(now.haircutPct, 0) : '100%';
+        vb.textContent = 'Only a ' + pc(Math.max(0, now.loserMove)) + ' move so far. Closing now would lose ' + hc + ' of the losing leg’s loss to the haircut. Wait for ' + px(plan.down.p) + ' or ' + px(plan.up.p) + '.';
+      } else {
+        vd.className = 'verdict hold'; vt.textContent = 'Hold';
+        const dist = now.loserLeg === 'long' ? (s.cur - plan.down.p) / s.cur : (plan.up.p - s.cur) / s.cur;
+        vb.textContent = pc(now.loserMove) + ' against the ' + now.loserLeg + ' so far, ' + pc(dist) + ' to go. Closing now would cost ' + usd(now.per1k, 2) + ' per 1,000 PAPER versus ' + usd(now.loserLeg === 'long' ? plan.down.per1k : plan.up.per1k, 2) + ' at target.';
+      }
+    }
+
+    // Ladder SVG
+    drawLadder(s, plan, liqLong, liqShort);
+    $('ladderTitle').textContent = s.mk + ' price map';
+    $('ladderNote').textContent = 'Liquidation at ' + px(liqLong) + ' for the long and ' + px(liqShort) + ' for the short (' + pc(liqMove) + ' from entry at ' + num(s.lev) + '×). Margin per leg: ' + usd(s.N / s.lev) + '.';
+
+    // Recommendation note
+    const decayTxt = s.decay > 0.0005 ? 'With the rate falling ' + (s.decay * 100).toFixed(1) + '% an hour' : 'With the rate steady';
+    $('recNote').textContent = useOverride
+      ? 'You set the target to ' + pc(m) + '. The recommended target for your rate trend is ' + pc(auto) + '.'
+      : decayTxt + ', a ' + pc(auto) + ' move gives the lowest cost once the wait is counted. Bigger moves cut the haircut but mint later at a lower rate.';
+
+    // Table
+    const rows = ROWS.map(x => x / 100);
+    if (isFinite(auto) && !rows.some(r => Math.abs(r - auto) < 1e-6)) rows.push(auto);
+    if (useOverride && !rows.some(r => Math.abs(r - m) < 1e-6)) rows.push(m);
+    rows.sort((a, b) => a - b);
+    $('table').innerHTML = rows.map(r => {
+      const pl = planFor(s, r);
+      const unsafe = r > liqMove;
+      const cls = unsafe ? 'bad' : Math.abs(r - m) < 1e-6 ? 'rec' : r > maxSafe ? 'thin' : '';
+      const paper = (pl.down.paper + pl.up.paper) / 2, cost = (pl.down.cost + pl.up.cost) / 2;
+      return '<tr class="' + cls + '"><td>' + pc(r) + (unsafe ? ' · liquidates first' : '') + '</td>' +
+        '<td class="n dn">' + px(pl.down.p) + '</td><td class="n upc">' + px(pl.up.p) + '</td>' +
+        '<td class="n">' + num(paper) + '</td><td class="n">' + usd(cost) + '</td>' +
+        '<td class="n">' + usd(pl.avgPer1k, 2) + '</td><td class="n">' + usd(pl.afterWait, 2) + '</td>' +
+        '<td class="n">' + hrs(pl.wait) + '</td></tr>';
+    }).join('');
+  }
+
+  function drawLadder(s, plan, liqL, liqS) {
+    const svg = $('ladder');
+    const W = 640, L = 24, R = 24, Y = 58;
+    const pts = [liqL, liqS, s.le, s.se];
+    if (plan) pts.push(plan.down.p, plan.up.p);
+    if (isFinite(s.cur)) pts.push(s.cur);
+    const finite = pts.filter(isFinite);
+    if (!finite.length) { svg.innerHTML = ''; return; }
+    let lo = Math.min(...finite), hi = Math.max(...finite);
+    const pad = (hi - lo) * 0.04 || 1; lo -= pad; hi += pad;
+    const x = p => L + (p - lo) / (hi - lo) * (W - L - R);
+    let g = '';
+    // zones
+    g += '<rect x="' + x(lo) + '" y="' + (Y - 6) + '" width="' + Math.max(0, x(liqL) - x(lo)) + '" height="12" style="fill:var(--down-soft)"/>';
+    g += '<rect x="' + x(liqS) + '" y="' + (Y - 6) + '" width="' + Math.max(0, x(hi) - x(liqS)) + '" height="12" style="fill:var(--down-soft)"/>';
+    if (plan) {
+      g += '<rect x="' + x(liqL) + '" y="' + (Y - 6) + '" width="' + Math.max(0, x(plan.down.p) - x(liqL)) + '" height="12" style="fill:var(--accent-soft)"/>';
+      g += '<rect x="' + x(plan.up.p) + '" y="' + (Y - 6) + '" width="' + Math.max(0, x(liqS) - x(plan.up.p)) + '" height="12" style="fill:var(--accent-soft)"/>';
+    }
+    g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y + '" y2="' + Y + '" style="stroke:var(--line);stroke-width:2"/>';
+    const tick = (p, col, label, above, anchor) => {
+      if (!isFinite(p)) return '';
+      const xx = x(p), ty = above ? Y - 14 : Y + 24, ty2 = above ? Y - 28 : Y + 38;
+      return '<line x1="' + xx + '" x2="' + xx + '" y1="' + (Y - 10) + '" y2="' + (Y + 10) + '" style="stroke:' + col + ';stroke-width:2.5"/>' +
+        '<text class="lab" x="' + xx + '" y="' + ty2 + '" text-anchor="' + anchor + '" style="fill:' + col + '">' + label + '</text>' +
+        '<text x="' + xx + '" y="' + ty + '" text-anchor="' + anchor + '">' + px(p) + '</text>';
+    };
+    g += tick(liqL, 'var(--down)', 'long liq', false, 'start');
+    g += tick(liqS, 'var(--down)', 'short liq', false, 'end');
+    if (plan) {
+      g += tick(plan.down.p, 'var(--down)', 'close ↓', true, 'middle');
+      g += tick(plan.up.p, 'var(--up)', 'close ↑', true, 'middle');
+    }
+    const mid = (s.le + s.se) / 2;
+    g += tick(mid, 'var(--ink)', 'entry', false, 'middle');
+    if (isFinite(s.cur)) {
+      const cx = x(Math.min(Math.max(s.cur, lo), hi));
+      g += '<path d="M' + (cx - 7) + ' ' + (Y - 22) + ' L' + (cx + 7) + ' ' + (Y - 22) + ' L' + cx + ' ' + (Y - 10) + ' Z" style="fill:var(--accent)"/>';
+      g += '<text class="lab" x="' + cx + '" y="' + (Y - 40) + '" text-anchor="middle" style="fill:var(--accent)">now ' + px(s.cur) + '</text>';
+    }
+    svg.innerHTML = g;
+  }
+
+  // Copy buttons
+  document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', () => {
+    const el = $(btn.dataset.copy);
+    const text = el.textContent.replace(/,/g, '');
+    const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1200); };
+    try {
+      navigator.clipboard.writeText(text).then(done, () => selectText(el));
+    } catch (e) { selectText(el); }
+  }));
+  function selectText(el) {
+    try { const r = document.createRange(); r.selectNodeContents(el); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch (e) {}
+  }
+
+  $('form').addEventListener('input', render);
+  $('form').addEventListener('change', render);
+  $('form').addEventListener('submit', e => e.preventDefault());
+  render();
+})();
+</script>
+
+</body></html>
